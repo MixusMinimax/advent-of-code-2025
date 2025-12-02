@@ -34,3 +34,6 @@
 
 # Build Folder
 cmake-build*
+
+# IDE
+.idea
