@@ -74,4 +74,5 @@ int main() {
         }
     }
     std::println("Result: {}", accessible_count);
+    return 0;
 }
