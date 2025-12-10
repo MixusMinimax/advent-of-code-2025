@@ -1,6 +1,6 @@
 #include "lib08.hpp"
 
 int main() {
-    run(false, true);
+    run(false, false);
     return 0;
 }
