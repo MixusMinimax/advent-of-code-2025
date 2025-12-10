@@ -4,7 +4,7 @@ BasedOnStyle: LLVM
 AccessModifierOffset: -4
 AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false
-AlignOperands: true
+AlignOperands: DontAlign
 AlignTrailingComments: false
 AlwaysBreakTemplateDeclarations: Yes
 AllowShortIfStatementsOnASingleLine: WithoutElse
@@ -25,6 +25,10 @@ BraceWrapping:
   SplitEmptyFunction: true
   SplitEmptyRecord: true
   SplitEmptyNamespace: true
+BreakBinaryOperations: RespectPrecedence
+BreakBeforeBinaryOperators: All
+BreakBeforeTernaryOperators: true
+PointerAlignment: Right
 BreakBeforeBraces: Custom
 BreakConstructorInitializers: AfterColon
 BreakConstructorInitializersBeforeComma: false
@@ -46,6 +50,7 @@ MacroBlockBegin: ''
 MacroBlockEnd: ''
 MaxEmptyLinesToKeep: 2
 NamespaceIndentation: All
+SeparateDefinitionBlocks: Always
 SpaceAfterCStyleCast: true
 SpaceAfterTemplateKeyword: false
 SpaceBeforeRangeBasedForLoopColon: false
