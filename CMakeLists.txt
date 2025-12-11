@@ -5,6 +5,30 @@ project(aoc2025 VERSION 0.1.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+
+# Dependencies
+include(cmake/CPM.cmake)
+CPMAddPackage(
+        GITHUB_REPOSITORY glfw/glfw
+        GIT_TAG 3.4
+)
+add_library(glad_lib STATIC vendor/glad/src/gl.c)
+target_include_directories(glad_lib PUBLIC vendor/glad/include)
+CPMAddPackage(gh:ocornut/imgui@1.92.5)
+add_library(imgui STATIC
+        ${imgui_SOURCE_DIR}/imgui.cpp
+        ${imgui_SOURCE_DIR}/imgui_demo.cpp # optionally comment this out
+        ${imgui_SOURCE_DIR}/imgui_draw.cpp
+        ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+        ${imgui_SOURCE_DIR}/imgui_tables.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+)
+target_link_libraries(imgui PUBLIC glfw)
+target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
+target_compile_definitions(imgui PUBLIC -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS) # optional imgui setting
+set_target_properties(imgui PROPERTIES FOLDER third-party) # optional IDE dir
+
 # Subdirectories
 #add_subdirectory(util)
 
