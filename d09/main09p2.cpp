@@ -1,67 +1,66 @@
-#include <glad/gl.h>
-
-#include <GLFW/glfw3.h>
-#include <backends/imgui_impl_glfw.h>
-#include <backends/imgui_impl_opengl3.h>
-#include <imgui.h>
-
+#include <algorithm>
+#include <chrono>
+#include <concepts>
+#include <format>
 #include <fstream>
-#include <iostream>
+#include <map>
+#include <print>
+#include <ranges>
+#include <vector>
+
+#include <vec.hpp>
+
+using int2 = util::vec2<int>;
+
+struct coord_mapping {
+    std::vector<int> compact_to_actual;
+    std::map<int, int> actual_to_compact;
+};
+
+template<>
+struct std::formatter<coord_mapping> : std::formatter<char> {
+    template<typename FormatContext>
+    FormatContext::iterator format(const coord_mapping &cm, FormatContext &ctx) const {
+        return std::format_to(ctx.out(), "coord_mapping {{ compact_to_actual: {}, actual_to_compact: {} }}",
+                              cm.compact_to_actual, cm.actual_to_compact);
+    }
+};
+
+template<std::ranges::forward_range R>
+    requires std::integral<std::ranges::range_value_t<R>>
+coord_mapping coordinate_mapping(const R &coords) {
+    std::vector<int> used_coords = coords
+            | std::views::transform([](const int val) { return std::array{val - 1, val, val + 1}; })
+            | std::views::join
+            | std::ranges::to<std::vector>();
+    std::ranges::sort(used_coords);
+    used_coords.erase(std::ranges::unique(used_coords).begin(), used_coords.end());
+    std::map<int, int> reverse_mapping{};
+    for (int i = 0; const auto coord: used_coords)
+        reverse_mapping[coord] = i++;
+    // NRVO
+    return {.compact_to_actual = used_coords, .actual_to_compact = reverse_mapping};
+}
 
 int main() {
-    if (!glfwInit()) return -1;
+    std::ifstream f{"../../d09/sample.txt"};
+    // std::ifstream f{"../../d09/assignment.txt"};
+    std::vector<int2> coords{};
+    int a, b;
+    char comma;
+    while (f >> a >> comma >> b)
+        coords.emplace_back(a, b);
+    const coord_mapping x_mapping = coordinate_mapping(coords | std::views::transform(&int2::x));
+    const coord_mapping y_mapping = coordinate_mapping(coords | std::views::transform(&int2::y));
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    const std::vector<int2> compact_coords
+            = coords
+            | std::views::transform([&](const int2 &c) {
+                  return int2{.x = x_mapping.actual_to_compact.at(c.x), .y = y_mapping.actual_to_compact.at(c.y)};
+              })
+            | std::ranges::to<std::vector>();
 
-    GLFWwindow *window = glfwCreateWindow(1280, 720, "ImGui + GLFW + GLAD", nullptr, nullptr);
+    std::println("{}", compact_coords);
 
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(1);
-
-    // Load OpenGL (needs GLAD on Windows!)
-    if (gladLoadGL(glfwGetProcAddress) == 0) {
-        std::cerr << "Failed to load OpenGL\n";
-        return -1;
-    }
-
-    // Init ImGui
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 330");
-
-    // Main Loop
-    while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
-
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-
-        ImGui::Begin("Hello");
-        ImGui::Text("Cross-platform ImGui + GLFW + GLAD!");
-        ImGui::End();
-
-        ImGui::Render();
-
-        int w, h;
-        glfwGetFramebufferSize(window, &w, &h);
-        glViewport(0, 0, w, h);
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        glfwSwapBuffers(window);
-    }
-
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-
-    glfwDestroyWindow(window);
-    glfwTerminate();
     return 0;
 }

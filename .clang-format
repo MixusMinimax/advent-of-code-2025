@@ -49,7 +49,7 @@ InsertNewlineAtEOF: true
 MacroBlockBegin: ''
 MacroBlockEnd: ''
 MaxEmptyLinesToKeep: 2
-NamespaceIndentation: All
+NamespaceIndentation: None
 SeparateDefinitionBlocks: Always
 SpaceAfterCStyleCast: true
 SpaceAfterTemplateKeyword: false

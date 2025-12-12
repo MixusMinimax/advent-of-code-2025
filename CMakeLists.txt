@@ -30,7 +30,7 @@ target_compile_definitions(imgui PUBLIC -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS) # op
 set_target_properties(imgui PROPERTIES FOLDER third-party) # optional IDE dir
 
 # Subdirectories
-#add_subdirectory(util)
+add_subdirectory(util)
 
 add_subdirectory(d01)
 add_subdirectory(d02)

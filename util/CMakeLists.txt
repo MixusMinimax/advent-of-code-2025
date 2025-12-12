@@ -1,1 +1,2 @@
-add_library(util)
+add_library(util INTERFACE)
+target_include_directories(util INTERFACE .)
