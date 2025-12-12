@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <concepts>
 #include <format>
@@ -36,13 +37,65 @@ coord_mapping coordinate_mapping(const R &coords) {
     std::ranges::sort(used_coords);
     used_coords.erase(std::ranges::unique(used_coords).begin(), used_coords.end());
     std::map<int, int> reverse_mapping{};
-    for (int i = 0; const auto coord: used_coords)
+    for (int i = 0; auto &&coord: used_coords)
         reverse_mapping[coord] = i++;
     // NRVO
     return {.compact_to_actual = used_coords, .actual_to_compact = reverse_mapping};
 }
 
+enum struct color { UNSET, RED, GREEN };
+
+struct grid {
+    int width, height;
+    std::vector<color> data;
+
+    grid(const int width, const int height) :
+        width{width}, height{height}, data{static_cast<std::size_t>(width) * height} {}
+
+    [[nodiscard]]
+    color get(const int x, const int y) const {
+        return data[idx(x, y)];
+    }
+
+    void set(const int x, const int y, const color val) { data[idx(x, y)] = val; }
+
+private:
+    constexpr int idx(const int x, const int y) const {
+        assert(x >= 0);
+        assert(x < width);
+        assert(y >= 0);
+        assert(y < height);
+        return y * width + x;
+    }
+};
+
+template<>
+struct std::formatter<grid> : std::formatter<char> {
+    template<typename FormatContext>
+    static auto format(const grid &g, FormatContext &ctx) {
+        std::stringstream ss{};
+        for (int y = 0; y < g.height; ++y) {
+            if (y != 0) ss << std::endl;
+            for (int x = 0; x < g.width; ++x) {
+                switch (g.get(x, y)) {
+                    case color::UNSET:
+                        ss << '.';
+                        break;
+                    case color::RED:
+                        ss << '#';
+                        break;
+                    case color::GREEN:
+                        ss << 'X';
+                        break;
+                }
+            }
+        }
+        return std::ranges::copy(std::move(ss).str(), ctx.out()).out;
+    }
+};
+
 int main() {
+
     std::ifstream f{"../../d09/sample.txt"};
     // std::ifstream f{"../../d09/assignment.txt"};
     std::vector<int2> coords{};
@@ -60,7 +113,12 @@ int main() {
               })
             | std::ranges::to<std::vector>();
 
-    std::println("{}", compact_coords);
+    grid g(x_mapping.compact_to_actual.size(), y_mapping.compact_to_actual.size());
+
+    for (const auto &[x, y]: compact_coords)
+        g.set(x, y, color::RED);
+
+    std::println("{}", g);
 
     return 0;
 }
