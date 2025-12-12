@@ -1,12 +1,11 @@
 #include <algorithm>
 #include <cassert>
-#include <chrono>
-#include <concepts>
 #include <format>
 #include <fstream>
 #include <map>
 #include <print>
 #include <ranges>
+#include <sstream>
 #include <vector>
 
 #include <vec.hpp>
@@ -31,11 +30,11 @@ template<std::ranges::forward_range R>
     requires std::integral<std::ranges::range_value_t<R>>
 coord_mapping coordinate_mapping(const R &coords) {
     std::vector<int> used_coords = coords
-            | std::views::transform([](const int val) { return std::array{val - 1, val, val + 1}; })
+            | std::views::transform([](const int val) { return std::array{val, val + 1}; })
             | std::views::join
             | std::ranges::to<std::vector>();
     std::ranges::sort(used_coords);
-    used_coords.erase(std::ranges::unique(used_coords).begin(), used_coords.end());
+    used_coords.erase(std::ranges::unique(used_coords).begin() - 1, used_coords.end());
     std::map<int, int> reverse_mapping{};
     for (int i = 0; auto &&coord: used_coords)
         reverse_mapping[coord] = i++;
@@ -95,7 +94,6 @@ struct std::formatter<grid> : std::formatter<char> {
 };
 
 int main() {
-
     std::ifstream f{"../../d09/sample.txt"};
     // std::ifstream f{"../../d09/assignment.txt"};
     std::vector<int2> coords{};
