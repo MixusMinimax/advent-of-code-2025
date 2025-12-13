@@ -36,6 +36,8 @@ CPMAddPackage(
         GIT_TAG 5.0.1
 )
 
+CPMAddPackage(gh:foonathan/lexy@2025.05.0)
+
 # Subdirectories
 add_subdirectory(util)
 
@@ -48,3 +50,4 @@ add_subdirectory(d06)
 add_subdirectory(d07)
 add_subdirectory(d08)
 add_subdirectory(d09)
+add_subdirectory(d10)
