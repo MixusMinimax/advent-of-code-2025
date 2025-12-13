@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include(cmake/CPM.cmake)
 CPMAddPackage(
         GITHUB_REPOSITORY glfw/glfw
+        VERSION 3.4
         GIT_TAG 3.4
 )
 add_library(glad_lib STATIC vendor/glad/src/gl.c)
@@ -28,6 +29,12 @@ target_link_libraries(imgui PUBLIC glfw)
 target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR} ${imgui_SOURCE_DIR}/backends)
 target_compile_definitions(imgui PUBLIC -DIMGUI_DISABLE_OBSOLETE_FUNCTIONS) # optional imgui setting
 set_target_properties(imgui PROPERTIES FOLDER third-party) # optional IDE dir
+
+CPMAddPackage(
+        GITLAB_REPOSITORY libeigen/eigen
+        VERSION 5.0.1
+        GIT_TAG 5.0.1
+)
 
 # Subdirectories
 add_subdirectory(util)

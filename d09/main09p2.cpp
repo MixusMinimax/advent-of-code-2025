@@ -59,7 +59,7 @@ struct grid {
     void set(const int x, const int y, const color val) { data[idx(x, y)] = val; }
 
 private:
-    constexpr int idx(const int x, const int y) const {
+    [[nodiscard]] constexpr int idx(const int x, const int y) const {
         assert(x >= 0);
         assert(x < width);
         assert(y >= 0);
@@ -107,14 +107,20 @@ int main() {
     const std::vector<int2> compact_coords
             = coords
             | std::views::transform([&](const int2 &c) {
-                  return int2{.x = x_mapping.actual_to_compact.at(c.x), .y = y_mapping.actual_to_compact.at(c.y)};
+                  return int2{x_mapping.actual_to_compact.at(c.x), y_mapping.actual_to_compact.at(c.y)};
               })
             | std::ranges::to<std::vector>();
 
-    grid g(x_mapping.compact_to_actual.size(), y_mapping.compact_to_actual.size());
+    grid g{static_cast<int>(x_mapping.compact_to_actual.size()), static_cast<int>(y_mapping.compact_to_actual.size())};
 
-    for (const auto &[x, y]: compact_coords)
-        g.set(x, y, color::RED);
+    int2 prev = compact_coords.back();
+    for (auto &&cur: compact_coords) {
+        const auto direction = clamp(cur - prev, -1, 1);
+        for (auto p = prev + direction; p != cur; p += direction)
+            g.set(p.x, p.y, color::GREEN);
+        g.set(cur.x, cur.y, color::RED);
+        prev = cur;
+    }
 
     std::println("{}", g);
 
