@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <deque>
 #include <format>
 #include <fstream>
@@ -129,6 +130,20 @@ static_assert(relative_direction(2, 0) == 2);
 static_assert(relative_direction(3, 2) == -1);
 static_assert(relative_direction(3, 3) == 0);
 
+template<typename... Args>
+std::chrono::time_point<std::chrono::steady_clock> start_clock(std::format_string<Args...> fmt, Args &&...args) {
+    std::print(fmt, std::forward<Args...>(args)...);
+    return std::chrono::high_resolution_clock::now();
+}
+
+std::chrono::time_point<std::chrono::steady_clock> start_clock() { return std::chrono::high_resolution_clock::now(); }
+
+void stop_clock(const std::chrono::time_point<std::chrono::steady_clock> &clk) {
+    std::println(" took {}",
+                 std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(
+                         std::chrono::high_resolution_clock::now() - clk));
+}
+
 int main() {
     // std::ifstream f{"../../d09/sample.txt"};
     std::ifstream f{"../../d09/assignment.txt"};
@@ -140,15 +155,18 @@ int main() {
     const coord_mapping x_mapping = coordinate_mapping(coords | std::views::transform(&int2::x));
     const coord_mapping y_mapping = coordinate_mapping(coords | std::views::transform(&int2::y));
 
+    auto t = start_clock("Parsing coords...");
     const std::vector<int2> compact_coords
             = coords
             | std::views::transform([&](const int2 &c) {
                   return int2{x_mapping.actual_to_compact.at(c.x), y_mapping.actual_to_compact.at(c.y)};
               })
             | std::ranges::to<std::vector>();
+    stop_clock(t);
 
     grid g{static_cast<int>(x_mapping.compact_to_actual.size()), static_cast<int>(y_mapping.compact_to_actual.size())};
 
+    t = start_clock("Drawing outline...");
     int rot_angle = 0;
     int prev_angle = direction(compact_coords.back() - *(compact_coords.end() - 2));
     int2 prev = compact_coords.back();
@@ -162,10 +180,11 @@ int main() {
         g.set(cur, color::RED);
         prev = cur;
     }
-    std::println("{}", g);
+    stop_clock(t);
     if (rot_angle != 4 && rot_angle != -4)
         throw std::runtime_error(
                 std::format("Fuck, rot_angle={}, it's not a perfect circle featuring Maynard James Keenan", rot_angle));
+    t = start_clock("Filling shape...");
     const bool clockwise = rot_angle == 4;
     const auto first_dir = clamp(compact_coords[1] - compact_coords[0], -1, 1);
     const int2 right{-first_dir.y, first_dir.x};
@@ -178,7 +197,9 @@ int main() {
         g.set(next, color::GREEN);
         frontier.append_range(std::array{next + int2{1, 0}, next + int2{0, 1}, next + int2{-1, 0}, next + int2{0, -1}});
     }
+    stop_clock(t);
 
+    t = start_clock("Searching for biggest rectangle...");
     std::pair largest_area_indices{-1, -1};
     long long largest_area = -1;
     for (int i = 0; i < coords.size() - 1; ++i) {
@@ -205,8 +226,7 @@ int main() {
         fail:;
         }
     }
-
-    std::println("\n{}", g);
+    stop_clock(t);
 
     std::println("Largest rectangle: {} to {} with {}", coords[largest_area_indices.first],
                  coords[largest_area_indices.second], largest_area);
