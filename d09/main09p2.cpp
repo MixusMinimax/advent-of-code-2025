@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cassert>
+#include <deque>
 #include <format>
 #include <fstream>
 #include <map>
@@ -56,7 +57,14 @@ struct grid {
         return data[idx(x, y)];
     }
 
+    [[nodiscard]]
+    color get(const int2 &p) const {
+        return data[idx(p.x, p.y)];
+    }
+
     void set(const int x, const int y, const color val) { data[idx(x, y)] = val; }
+
+    void set(const int2 &p, const color val) { data[idx(p.x, p.y)] = val; }
 
 private:
     [[nodiscard]] constexpr int idx(const int x, const int y) const {
@@ -93,9 +101,37 @@ struct std::formatter<grid> : std::formatter<char> {
     }
 };
 
+/// get angular direction from vector. 0 is north, 1 is east, 2 is south, 3 is west.
+/// @param vec assumed to be horizontal / vertical
+/// @return [0;3]
+constexpr int direction(const int2 &vec) {
+    if (vec.y < 0) return 0;
+    if (vec.x > 0) return 1;
+    if (vec.y > 0) return 2;
+    if (vec.x < 0) return 3;
+    throw std::invalid_argument("[0, 0] be forbidden, me lad");
+}
+
+/// returns the relative angle. 1 to 2 is 1, 1 to 3 is 2, 1 to 3 is -1.
+/// 0 means straight, 1 means right, -1 means left, 2 means 180º.
+/// @param from old angle
+/// @param to new anle
+/// @return [-1;2]
+constexpr int relative_direction(const int from, const int to) { return (to + 4 - from + 1) % 4 - 1; }
+
+static_assert(relative_direction(0, 1) == 1);
+static_assert(relative_direction(0, 2) == 2);
+static_assert(relative_direction(0, 3) == -1);
+static_assert(relative_direction(1, 3) == 2);
+static_assert(relative_direction(3, 0) == 1);
+static_assert(relative_direction(3, 1) == 2);
+static_assert(relative_direction(2, 0) == 2);
+static_assert(relative_direction(3, 2) == -1);
+static_assert(relative_direction(3, 3) == 0);
+
 int main() {
-    std::ifstream f{"../../d09/sample.txt"};
-    // std::ifstream f{"../../d09/assignment.txt"};
+    // std::ifstream f{"../../d09/sample.txt"};
+    std::ifstream f{"../../d09/assignment.txt"};
     std::vector<int2> coords{};
     int a, b;
     char comma;
@@ -113,16 +149,67 @@ int main() {
 
     grid g{static_cast<int>(x_mapping.compact_to_actual.size()), static_cast<int>(y_mapping.compact_to_actual.size())};
 
+    int rot_angle = 0;
+    int prev_angle = direction(compact_coords.back() - *(compact_coords.end() - 2));
     int2 prev = compact_coords.back();
     for (auto &&cur: compact_coords) {
-        const auto direction = clamp(cur - prev, -1, 1);
-        for (auto p = prev + direction; p != cur; p += direction)
-            g.set(p.x, p.y, color::GREEN);
-        g.set(cur.x, cur.y, color::RED);
+        const auto dir = clamp(cur - prev, -1, 1);
+        const auto angle = direction(dir);
+        rot_angle += relative_direction(prev_angle, angle);
+        prev_angle = angle;
+        for (auto p = prev + dir; p != cur; p += dir)
+            g.set(p, color::GREEN);
+        g.set(cur, color::RED);
         prev = cur;
     }
-
     std::println("{}", g);
+    if (rot_angle != 4 && rot_angle != -4)
+        throw std::runtime_error(
+                std::format("Fuck, rot_angle={}, it's not a perfect circle featuring Maynard James Keenan", rot_angle));
+    const bool clockwise = rot_angle == 4;
+    const auto first_dir = clamp(compact_coords[1] - compact_coords[0], -1, 1);
+    const int2 right{-first_dir.y, first_dir.x};
+    const auto inside = compact_coords[0] + first_dir + (clockwise ? right : -right);
+    std::deque frontier{inside};
+    while (!frontier.empty()) {
+        const auto next = frontier.front();
+        frontier.pop_front();
+        if (g.get(next) != color::UNSET) continue;
+        g.set(next, color::GREEN);
+        frontier.append_range(std::array{next + int2{1, 0}, next + int2{0, 1}, next + int2{-1, 0}, next + int2{0, -1}});
+    }
+
+    std::pair largest_area_indices{-1, -1};
+    long long largest_area = -1;
+    for (int i = 0; i < coords.size() - 1; ++i) {
+        for (int j = i + 1; j < coords.size(); ++j) {
+            const auto a_real = coords[i];
+            const auto b_real = coords[j];
+            const auto area = static_cast<long long>(std::abs(b_real.x - a_real.x) + 1)
+                    * static_cast<long long>(std::abs(b_real.y - a_real.y) + 1);
+            if (area <= largest_area) continue;
+            // check for validity
+            const auto a_compact
+                    = int2{x_mapping.actual_to_compact.at(a_real.x), y_mapping.actual_to_compact.at(a_real.y)};
+            const auto b_compact
+                    = int2{x_mapping.actual_to_compact.at(b_real.x), y_mapping.actual_to_compact.at(b_real.y)};
+            const auto top_left = min(a_compact, b_compact);
+            const auto bottom_right = max(a_compact, b_compact);
+            for (int y = top_left.y; y <= bottom_right.y; ++y) {
+                for (int x = top_left.x; x <= bottom_right.x; ++x) {
+                    if (g.get(x, y) == color::UNSET) goto fail;
+                }
+            }
+            largest_area = area;
+            largest_area_indices = {i, j};
+        fail:;
+        }
+    }
+
+    std::println("\n{}", g);
+
+    std::println("Largest rectangle: {} to {} with {}", coords[largest_area_indices.first],
+                 coords[largest_area_indices.second], largest_area);
 
     return 0;
 }
