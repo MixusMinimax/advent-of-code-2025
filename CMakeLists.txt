@@ -40,21 +40,23 @@ CPMAddPackage(gh:foonathan/lexy@2025.05.0)
 
 #CPMAddPackage(gh:madler/zlib@1.3.1)
 
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
+if (NOT WIN32)
+    list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 
-# Work around broken FindQuadmath.cmake in papilo/soplex
-set(Quadmath_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}" CACHE PATH "" FORCE)
-# Create an IMPORTED library for linking
-if (NOT TARGET Quadmath::quadmath)
-    add_library(Quadmath::quadmath INTERFACE IMPORTED)
-    set_target_properties(Quadmath::quadmath PROPERTIES
-            INTERFACE_INCLUDE_DIRECTORIES "${Quadmath_INCLUDE_DIR}"
-            INTERFACE_LINK_LIBRARIES "quadmath"   # <- system library
-    )
+    # Work around broken FindQuadmath.cmake in papilo/soplex
+    set(Quadmath_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}" CACHE PATH "" FORCE)
+    # Create an IMPORTED library for linking
+    if (NOT TARGET Quadmath::quadmath)
+        add_library(Quadmath::quadmath INTERFACE IMPORTED)
+        set_target_properties(Quadmath::quadmath PROPERTIES
+                INTERFACE_INCLUDE_DIRECTORIES "${Quadmath_INCLUDE_DIR}"
+                INTERFACE_LINK_LIBRARIES "quadmath"   # <- system library
+        )
+    endif ()
+    find_package(papilo REQUIRED)
+    find_package(soplex REQUIRED)
+    find_package(scip REQUIRED)
 endif ()
-find_package(papilo REQUIRED)
-find_package(soplex REQUIRED)
-find_package(scip REQUIRED)
 
 # Subdirectories
 add_subdirectory(util)
@@ -69,3 +71,4 @@ add_subdirectory(d07)
 add_subdirectory(d08)
 add_subdirectory(d09)
 add_subdirectory(d10)
+add_subdirectory(d11)
