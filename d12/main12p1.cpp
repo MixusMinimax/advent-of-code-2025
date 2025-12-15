@@ -8,7 +8,7 @@
 
 int main() {
     const auto file = lexy::read_file<lexy::utf8_encoding>("../../d12/sample.txt");
-    // const auto file = lexy::read_file<lexy::utf32_encoding>("../../d12/assignment.txt");
+    // const auto file = lexy::read_file<lexy::utf8_encoding>("../../d12/assignment.txt");
     const auto result = lexy::parse<grammar::file>(file.buffer(), lexy_ext::report_error).value();
     std::println("{}", result);
     return 0;
