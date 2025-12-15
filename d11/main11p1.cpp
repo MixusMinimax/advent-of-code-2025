@@ -49,8 +49,8 @@ struct server {
 } // namespace grammar
 
 struct graph_struct {
-    std::vector<std::string_view> index_to_name;
-    std::map<std::string_view, int> name_to_index;
+    std::vector<std::string> index_to_name;
+    std::map<std::string, int> name_to_index;
     std::map<int, std::vector<int>> edges;
 };
 
@@ -59,14 +59,15 @@ struct std::formatter<graph_struct> : std::formatter<char> {
     template<typename FormatCtx>
     auto format(const graph_struct &graph, FormatCtx &ctx) const {
         bool start = true;
+        auto it = ctx.out();
         for (const auto &[from, to]: graph.edges) {
-            if (!start) std::format_to(ctx.out(), "\n");
+            if (!start) it = std::format_to(it, "\n");
             start = false;
-            std::format_to(ctx.out(), "{}:", graph.index_to_name.at(from));
+            it = std::format_to(it, "{}:", graph.index_to_name.at(from));
             for (const auto &neighbor: to)
-                std::format_to(ctx.out(), " {}", graph.index_to_name.at(neighbor));
+                it = std::format_to(it, " {}", graph.index_to_name.at(neighbor));
         }
-        return ctx.out();
+        return it;
     }
 };
 
@@ -79,16 +80,16 @@ graph_struct parse_graph(std::istream &f) {
     }();
 
     const auto names = [&] {
-        std::set<std::string_view> tmp{};
+        std::set<std::string> tmp{};
         for (const auto &server: servers) {
             tmp.insert(server.from);
             tmp.insert_range(server.to);
         }
-        return std::vector(tmp.begin(), tmp.end());
+        return std::vector(std::move(tmp).begin(), std::move(tmp).end());
     }();
 
     const auto name_to_index = [&] {
-        std::map<std::string_view, int> tmp{};
+        std::map<std::string, int> tmp{};
         for (int i = 0; i < names.size(); ++i)
             tmp[names[i]] = i;
         return tmp;
@@ -107,12 +108,22 @@ graph_struct parse_graph(std::istream &f) {
     return {.index_to_name = names, .name_to_index = name_to_index, .edges = edges};
 }
 
+int count_paths(const graph_struct &graph, const int from, const int to) {
+    if (from == to) return 1;
+    int total = 0;
+    for (const auto &next: graph.edges.at(from))
+        total += count_paths(graph, next, to);
+    return total;
+}
+
 int main() {
-    std::ifstream f{"../../d11/sample.txt"};
-    // std::ifstream f{"../../d11/assignment.txt"};
+    // std::ifstream f{"../../d11/sample.txt"};
+    std::ifstream f{"../../d11/assignment.txt"};
 
     const auto graph = parse_graph(f);
     std::println("{}", graph);
+
+    std::println("Result: {}", count_paths(graph, graph.name_to_index.at("you"), graph.name_to_index.at("out")));
 
     return 0;
 }
