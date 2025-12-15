@@ -40,42 +40,7 @@ CPMAddPackage(gh:foonathan/lexy@2025.05.0)
 
 #CPMAddPackage(gh:madler/zlib@1.3.1)
 
-#set(STATIC_GMP ON CACHE BOOL "" FORCE)
-#set(STATIC_MPFR ON CACHE BOOL "" FORCE)
-#
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
-#set(GMP_DIR "C:/msys64/mingw64")
-#find_package(GMP REQUIRED)
-#set(MPFR_DIR "C:/msys64/mingw64")
-#find_package(MPFR REQUIRED)
-#
-#set(AUTOBUILD OFF CACHE BOOL "" FORCE)
-#
-## Required for exact solving
-#set(GMP ON CACHE BOOL "" FORCE)
-#set(MPFR ON CACHE BOOL "" FORCE)
-#
-## Disable optional / unwanted features
-#set(ZLIB OFF CACHE BOOL "" FORCE)
-#set(READLINE OFF CACHE BOOL "" FORCE)
-#set(PAPILO OFF CACHE BOOL "" FORCE)
-#set(ZIMPL OFF CACHE BOOL "" FORCE)
-#set(AMPL OFF CACHE BOOL "" FORCE)
-#set(IPOPT OFF CACHE BOOL "" FORCE)
-#set(LAPACK OFF CACHE BOOL "" FORCE)
-#set(WORHP OFF CACHE BOOL "" FORCE)
-#set(CONOPT OFF CACHE BOOL "" FORCE)
-#set(LPSCHECK OFF CACHE BOOL "" FORCE)
-#
-## Reasonable defaults
-#set(THREADSAFE ON CACHE BOOL "" FORCE)
-#set(DEBUGSOL OFF CACHE BOOL "" FORCE)
-#set(SANITIZE OFF CACHE BOOL "" FORCE)
-#set(COVERAGE OFF CACHE BOOL "" FORCE)
-#set(LTO OFF CACHE BOOL "" FORCE)
-#
-#CPMAddPackage(gh:scipopt/soplex@8.0.0)
-#CPMAddPackage(gh:scipopt/scip@10.0.0)
 
 # Work around broken FindQuadmath.cmake in papilo/soplex
 set(Quadmath_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}" CACHE PATH "" FORCE)

@@ -1,8 +1,5 @@
-#include <bit>
-#include <cstdint>
 #include <format>
 #include <fstream>
-#include <iostream>
 #include <print>
 #include <string>
 #include <vector>
@@ -48,13 +45,13 @@ SCIP_RETCODE solve_machine(SCIP *scip, const ast::machine &machine, int &push_co
     SCIP_CALL(SCIPsolve(scip));
 
     if (SCIP_SOL *sol = SCIPgetBestSol(scip); sol != nullptr) {
-        std::cout << "Solution found:\n";
+        std::println("Solution found:");
         for (int i = 0; i < vars.size(); ++i) {
             std::print("b{} = {}, ", i, SCIPgetSolVal(scip, sol, vars[i]));
         }
         std::println("Objective = {}", push_count = SCIPgetSolOrigObj(scip, sol));
     } else {
-        std::cout << "No solution found.\n";
+        std::println("No solution found.");
     }
 
     for (auto &&var: vars)
