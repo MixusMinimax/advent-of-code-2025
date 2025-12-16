@@ -24,6 +24,12 @@ struct present {
         assert(v.y < 3);
         return covered_cells[v.y * 3 + v.x];
     }
+
+    [[nodiscard]] int cell_count() const {
+        int count = 0;
+        for (const auto &b : covered_cells) if (b) ++count;
+        return count;
+    }
 };
 
 struct tree {

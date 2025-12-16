@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <vec.hpp>
 
 #include <format>
@@ -183,8 +184,8 @@ void place_present(std::string &out, const int width, const ast::present &p, con
 }
 
 int main() {
-    const auto file = lexy::read_file<lexy::utf8_encoding>("../../d12/sample.txt");
-    // const auto file = lexy::read_file<lexy::utf8_encoding>("../../d12/assignment.txt");
+    // const auto file = lexy::read_file<lexy::utf8_encoding>("../../d12/sample.txt");
+    const auto file = lexy::read_file<lexy::utf8_encoding>("../../d12/assignment.txt");
     const auto result = lexy::parse<grammar::file>(file.buffer(), lexy_ext::report_error).value();
     std::println("{}", result);
 
@@ -192,13 +193,31 @@ int main() {
     SCIP_CALL(SCIPcreate(&scip));
     SCIP_CALL(SCIPincludeDefaultPlugins(scip));
 
-    for (const auto &tree: result.trees) {
+    int skip_count = 0;
+    int guarantee_count = 0;
+
+    for (int i_tree = 0; i_tree < result.trees.size(); ++i_tree) {
+        const auto &tree = result.trees[i_tree];
         bool feasible;
         std::vector<placement> chosen_placements;
         std::vector<ast::present> used_presents{};
         for (int pr = 0; pr < result.presents.size(); ++pr)
             for (int i = 0; i < tree.present_counts[pr]; ++i)
                 used_presents.push_back(result.presents[pr]);
+
+        const int total_count = std::ranges::fold_left(used_presents | std::views::transform(&ast::present::cell_count), 0, std::plus{});
+        if (total_count > tree.w * tree.h) {
+            std::println("Skipping {} as it definitely doesn't fit {}>{}", i_tree, total_count, tree.w * tree.h);
+            ++skip_count;
+            continue;
+        }
+
+        if (used_presents.size() <= (tree.w / 3) * (tree.h / 3)) {
+            std::println("{} easily fits without overlaps", i_tree);
+            ++guarantee_count;
+            continue;
+        }
+
         SCIP_CALL(solve_tree(scip, used_presents, tree.w, tree.h, feasible, chosen_placements));
         std::string field(tree.w * tree.h, '.');
         for (const auto placement: chosen_placements) {
@@ -212,6 +231,10 @@ int main() {
 
     SCIP_CALL(SCIPfree(&scip));
     BMScheckEmptyMemory();
+
+    std::println("Skipped {}", skip_count);
+    std::println("Guaranteed {}", guarantee_count);
+    std::println("Remaining: {}", result.trees.size() - skip_count - guarantee_count);
 
     return 0;
 }
