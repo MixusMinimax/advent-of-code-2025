@@ -15,7 +15,7 @@
 #include <scip/scip.h>
 #include <scip/scipdefplugins.h>
 
-#include "model.h"
+#include "model.hpp"
 
 struct placement {
     int p, x, y, rot;
@@ -206,7 +206,8 @@ int main() {
             for (int i = 0; i < tree.present_counts[pr]; ++i)
                 used_presents.push_back(result.presents[pr]);
 
-        const int total_count = std::ranges::fold_left(used_presents | std::views::transform(&ast::present::cell_count), 0, std::plus{});
+        const int total_count = std::ranges::fold_left(used_presents | std::views::transform(&ast::present::cell_count),
+                                                       0, std::plus{});
         if (total_count > tree.w * tree.h) {
             std::println("Skipping {} as it definitely doesn't fit {}>{}", i_tree, total_count, tree.w * tree.h);
             ++skip_count;

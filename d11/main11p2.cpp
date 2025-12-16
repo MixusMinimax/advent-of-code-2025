@@ -5,7 +5,7 @@
 #include <tuple>
 #include <vector>
 
-#include "model.h"
+#include "model.hpp"
 
 long long count_paths(std::map<std::tuple<int, int, int, int, bool, bool>, long long> &cache, const graph_struct &graph,
                       const int from, const int to, const int find_a, const int find_b, bool found_a = false,

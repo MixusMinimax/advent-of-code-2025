@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "model.h"
+#include "model.hpp"
 
 int count_paths(const graph_struct &graph, const int from, const int to) {
     if (from == to) return 1;
