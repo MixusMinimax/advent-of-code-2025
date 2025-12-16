@@ -2,6 +2,7 @@
 #define AOC2025_VEC_H
 
 #include <format>
+#include <cmath>
 
 namespace util {
 template<typename S>
@@ -142,7 +143,7 @@ constexpr auto clamp(const vec2<Scalar> a, const std::convertible_to<vec2<Scalar
 } // namespace util
 
 template<typename Scalar, typename C>
-struct std::formatter<util::vec2<Scalar>, C> {
+struct std::formatter<util::vec2<Scalar>, C> { // NOLINT(*-dcl58-cpp)
     std::formatter<Scalar, C> scalar_formatter{};
 
     template<typename ParseContext>
@@ -157,6 +158,16 @@ struct std::formatter<util::vec2<Scalar>, C> {
         std::format_to(ctx.out(), ", ");
         scalar_formatter.format(v.y, ctx);
         return std::format_to(ctx.out(), "]");
+    }
+};
+
+template<typename Scalar>
+    requires std::same_as<std::hash<Scalar>, std::hash<Scalar>>
+struct std::hash<util::vec2<Scalar>> { // NOLINT(*-dcl58-cpp)
+    std::size_t operator()(const util::vec2<Scalar> &s) const noexcept {
+        const auto h1 = std::hash<int>{}(s.x);
+        const auto h2 = std::hash<int>{}(s.y);
+        return h1 ^ h2 << 1;
     }
 };
 

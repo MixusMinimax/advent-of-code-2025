@@ -2,16 +2,28 @@
 #define AOC2025_MODEL_H
 
 
+#include <array>
+#include <cassert>
 #include <format>
 #include <vector>
 
 #include <lexy/callback.hpp>
 #include <lexy/dsl.hpp>
 
+using int2 = util::vec2<int>;
+
 namespace ast {
 struct present {
     int id;
-    std::vector<bool> covered_cells;
+    std::array<bool, 9> covered_cells;
+
+    [[nodiscard]] bool at(const int2 v) const {
+        assert(v.x >= 0);
+        assert(v.x < 3);
+        assert(v.y >= 0);
+        assert(v.y < 3);
+        return covered_cells[v.y * 3 + v.x];
+    }
 };
 
 struct tree {
@@ -67,8 +79,8 @@ struct present_field {
 
 struct present_body {
     static constexpr auto whitespace = dsl::ascii::blank | dsl::newline;
-    static constexpr auto rule = dsl::list(dsl::p<present_field>);
-    static constexpr auto value = lexy::as_list<std::vector<bool>>;
+    static constexpr auto rule = dsl::times<9>(dsl::p<present_field>);
+    static constexpr auto value = lexy::construct<std::array<bool, 9>>;
 };
 
 struct present {
