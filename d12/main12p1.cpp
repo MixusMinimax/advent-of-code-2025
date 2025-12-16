@@ -72,6 +72,7 @@ std::generator<int2> covered_cells(const ast::present &present, const int x, con
     co_return;
 }
 
+/// this doesn't even work but it doesn't matter luckily
 SCIP_RETCODE solve_tree(SCIP *scip, const std::vector<ast::present> &presents, int width, int height, bool &feasible,
                         std::vector<placement> &chosen_placements) {
     std::vector<placement> placements{};
